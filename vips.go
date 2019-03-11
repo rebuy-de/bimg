@@ -397,7 +397,18 @@ func vipsPreSave(image *C.VipsImage, o *vipsSaveOptions) (*C.VipsImage, error) {
 }
 
 func vipsSave(image *C.VipsImage, o vipsSaveOptions) ([]byte, error) {
-	defer C.g_object_unref(C.gpointer(image))
+	defer func() {
+		if image == nil {
+			fmt.Fprint(os.Stderr, "WARNING: Tried to unref nil slice.")
+		}
+
+		ptr := C.gpointer(image)
+		if ptr == nil {
+			fmt.Fprint(os.Stderr, "WARNING: Tried to unref nil pointer.")
+		}
+
+		C.g_object_unref(ptr)
+	}()
 
 	tmpImage, err := vipsPreSave(image, &o)
 	if err != nil {
